@@ -2,29 +2,19 @@ package main;
 
 import student.StudentList;
 
-import java.io.*;
-import java.util.List;
 import java.util.Scanner;
+import java.util.stream.IntStream;
 
 public class Main {
     private static StudentList studentList;
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) {
         studentList = new StudentList();
         boolean work = true;
         Scanner in = new Scanner(System.in);
 
         do {
-            System.out.println("1. Добавить запись");
-            System.out.println("2. Удалить запись");
-            System.out.println("3. Редактировать запись");
-            System.out.println("4. Просмотр записей");
-            System.out.println("5. Поиск записей");
-            System.out.println("6. Сортировка записей");
-            System.out.println("7. Помощь");
-            System.out.println("8. Выход");
-            System.out.println("9. Импортировать данные из файла");
-            System.out.println("10. Экспорт данных в файл");
+            showMainMenu();
             int option = in.nextInt();
 
             switch (option) {
@@ -53,51 +43,47 @@ public class Main {
                     work = false;
                     break;
                 case 9:
-                    readFromFile();
-                    break;
                 case 10:
-                    writeToFile();
                     break;
                 default:
                     System.out.println("Нет такого пункта");
             }
         } while (work);
-
-
     }
 
     private static void addRecord() {
         Scanner in = new Scanner(System.in);
-        System.out.println("введите фамилию");
+
+        System.out.println("Введите фамилию");
         String surname = in.next();
+
         System.out.println("Введите группу");
         int group = in.nextInt();
+
         System.out.println("Введите 5 оценок");
-        int[] marks = new int[5];
-        for (int i = 0; i < 5; i++) {
-            marks[i] = in.nextInt();
-        }
-        System.out.println("Активный? 1 - да, 0 - нет");
+        int[] marks = IntStream.range(0, 5).map(i -> in.nextInt()).toArray();
+
+        System.out.println("Введите активность");
         int activity = in.nextInt();
-        studentList.add(surname, group, activity, marks);
+
+        try {
+            studentList.add(surname, group, activity, marks);
+        } catch (Exception e) {
+            showExceptionMsg(e);
+        }
     }
 
     private static void removeRecord() {
-        Scanner in = new Scanner(System.in);
         System.out.println("Введите номер записи");
-        studentList.removeRecord(in.nextInt() - 1);
+        studentList.removeRecord(new Scanner(System.in).nextInt() - 1);
     }
 
     private static void editRecord() {
-        Scanner in = new Scanner(System.in);
         System.out.println("Введите номер записи");
+        Scanner in = new Scanner(System.in);
         int index = in.nextInt() - 1;
         System.out.println(studentList.getStudentInfo(index));
-        System.out.println("Что менять?");
-        System.out.println("1. Фамилия");
-        System.out.println("2. Группа");
-        System.out.println("3. Оценка");
-        System.out.println("4. Активность");
+        showParameterSelectionMenu();
         int option = in.nextInt();
 
         switch (option) {
@@ -113,11 +99,21 @@ public class Main {
                 System.out.println("Введите номер экзамена от 1 до 5");
                 int examNumber = in.nextInt() - 1;
                 System.out.println("Введите оценку");
-                studentList.editMark(index, examNumber, in.nextInt());
+
+                try {
+                    studentList.editMark(index, examNumber, in.nextInt());
+                } catch (Exception e) {
+                    showExceptionMsg(e);
+                }
                 break;
             case 4:
-                System.out.println("Введите активность 0 или 1");
-                studentList.editActivity(index, in.nextInt());
+                System.out.println("Введите активность");
+
+                try {
+                    studentList.editActivity(index, in.nextInt());
+                } catch (Exception e) {
+                    showExceptionMsg(e);
+                }
                 break;
             default:
                 System.out.println("Нет такого пункта");
@@ -125,63 +121,36 @@ public class Main {
     }
 
     private static void printRecords() {
-        for (int i = 0; i < studentList.getSize(); i++) {
-            System.out.println((i + 1) + ". " + studentList.getStudentInfo(i));
-        }
+        System.out.println(studentList);
     }
 
     private static void search() {
+        showSearchAndSortMenu();
         Scanner in = new Scanner(System.in);
-        System.out.println("Выберите параметр для поиска");
-        System.out.println("1. По фамилии");
-        System.out.println("2. По группе");
-        System.out.println("3. По активности");
-        System.out.println("4. По оценке");
-        System.out.println("5. По стипендии");
         int option = in.nextInt();
 
         switch (option) {
             case 1:
                 System.out.println("Введите фамилию");
-                List<String> result = studentList.searchBySurname(in.next());
-
-                for (String s : result) {
-                    System.out.println(s);
-                }
+                studentList.searchBySurname(in.next()).forEach(System.out::println);
                 break;
             case 2:
                 System.out.println("Введите группу");
-                result = studentList.searchByGroup(in.nextInt());
-
-                for (String s : result) {
-                    System.out.println(s);
-                }
+                studentList.searchByGroup(in.nextInt()).forEach(System.out::println);
                 break;
             case 3:
                 System.out.println("Введите активность");
-                result = studentList.searchByActivity(in.nextInt());
-
-                for (String s : result) {
-                    System.out.println(s);
-                }
+                studentList.searchByActivity(in.nextInt()).forEach(System.out::println);
                 break;
             case 4:
                 System.out.println("Введите номер экзамена");
                 int examNumber = in.nextInt();
                 System.out.println("Введите оценку");
-                result = studentList.searchByMark(examNumber, in.nextInt());
-
-                for (String s : result) {
-                    System.out.println(s);
-                }
+                studentList.searchByMark(examNumber, in.nextInt()).forEach(System.out::println);
                 break;
             case 5:
                 System.out.println("Введите стипендию");
-                result = studentList.searchByScholarship(in.nextInt());
-
-                for (String s : result) {
-                    System.out.println(s);
-                }
+                studentList.searchByScholarship(in.nextInt()).forEach(System.out::println);
                 break;
             default:
                 System.out.println("Нет такого пункта");
@@ -189,13 +158,8 @@ public class Main {
     }
 
     private static void sort() {
+        showSearchAndSortMenu();
         Scanner in = new Scanner(System.in);
-        System.out.println("Выберите параметр для сортировки");
-        System.out.println("1. По фамилии");
-        System.out.println("2. По группе");
-        System.out.println("3. По активности");
-        System.out.println("4. По оценке");
-        System.out.println("5. По стипендии");
         int option = in.nextInt();
 
         switch (option) {
@@ -220,16 +184,34 @@ public class Main {
         }
     }
 
-    private static void writeToFile() throws IOException {
-        FileOutputStream fos = new FileOutputStream("students.info");
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(studentList);
-        oos.flush();
+    private static void showMainMenu() {
+        System.out.println("Выберите действие:");
+        System.out.println("1. Добавить запись");
+        System.out.println("2. Удалить запись");
+        System.out.println("3. Редактировать запись");
+        System.out.println("4. Просмотр записей");
+        System.out.println("5. Поиск записей");
+        System.out.println("6. Сортировка записей");
+        System.out.println("7. Помощь");
+        System.out.println("8. Выход");
+        System.out.println("9. Импортировать данные из файла");
+        System.out.println("10. Экспорт данных в файл");
     }
 
-    private static void readFromFile() throws IOException, ClassNotFoundException {
-        FileInputStream fis = new FileInputStream("students.info");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        studentList = (StudentList) ois.readObject();
+    private static void showSearchAndSortMenu() {
+        showParameterSelectionMenu();
+        System.out.println("5. Стипендия");
+    }
+
+    private static void showParameterSelectionMenu() {
+        System.out.println("Выберите параметр:");
+        System.out.println("1. Фамилия");
+        System.out.println("2. Группа");
+        System.out.println("3. Активность");
+        System.out.println("4. Оценка");
+    }
+
+    private static void showExceptionMsg(Exception e) {
+        System.out.println("Данные не изменены. " + e.getMessage());
     }
 }
